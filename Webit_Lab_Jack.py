@@ -141,11 +141,11 @@ class Webit_GUI(tk.Frame):
     def Get_Ain0(self):
         # TEST# It appears that the naming is as follows from the examples, but 
         # the examples on the website look more like hte second name (AIN0)
-        name = "FIO0"
-        # name = "AIN0"
+        # name = "FIO0"
+        name = "AIN0"
         result = ljm.eReadName(self.handle, name)
         print("\n%s state : %f" % (name, result))
-        self.self.Get_AIN0_Entry.insert(0, result)
+        self.Get_AIN0_Entry.insert(0, result)
 
 # Lets verify that reading in works. 
     def Set_Anode(self):
