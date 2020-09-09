@@ -145,7 +145,7 @@ class Webit_GUI(tk.Frame):
         # name = "AIN0"
         result = ljm.eReadName(self.handle, name)
         print("\n%s state : %f" % (name, result))
-        self.Entry_1_Entry.insert(0, result)
+        self.self.Get_AIN0_Entry.insert(0, result)
 
 # Lets verify that reading in works. 
     def Set_Anode(self):
