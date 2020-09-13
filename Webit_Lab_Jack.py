@@ -151,11 +151,17 @@ class Webit_GUI(tk.Frame):
             self.AIN_Var[i].set ("AIN{}:\t{:.2f}".format (i, self.AIN[i]))
         
     def UpdateInfo (self) :
+        # connection types
+        #LJM_ctANY (0), LJM_ctUSB (1), LJM_ctTCP (2), LJM_ctETHERNET (3), LJM_ctWIFI (4)
+        CT_string_list = ['ANY', 'USB', 'TCP', 'ETHERNET', 'WIFI']
+        CT_string = 'NONE'
+        if self.ConnectionType > -1 :
+            CT_string = CT_string_list[self.ConnectionType]
         self.SerialNumber_Var.set ("Serial Number {}".format (self.SerialNumber))
         self.IPaddress_Var.set ("IP address {}".format (self.IPaddress))
         self.Port_Var.set ("Port {}".format (self.Port))
         self.DeviceType_Var.set ("DeviceType {}".format (self.DeviceType))
-        self.ConnectionType_Var.set ("Connection Type {}".format (self.ConnectionType))
+        self.ConnectionType_Var.set ("Connection Type {} ({})".format (self.ConnectionType, CT_string))
         self.MaxBytesPerMB_Var.set ("Max Bytes Per MB {}".format (self.MaxBytesPerMB))
         
     # This is a test to verify that the GUI is able to get the first Analog input 
@@ -223,11 +229,6 @@ if __name__ == "__main__":
 # add error handling for connect (and disconnect?)
 # add logging (need to record time - figure out best scheme)
 # add plotting
-# print info on connection type
-
-# connection types
-#LJM_ctANY (0), LJM_ctUSB (1), LJM_ctTCP (2), LJM_ctETHERNET (3), LJM_ctWIFI (4)
-
 
 # make formatting better
 
