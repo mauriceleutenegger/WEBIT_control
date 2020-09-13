@@ -79,7 +79,7 @@ class Webit_GUI(tk.Frame):
 
         # make output fields for AIN values using tk.Label
         self.AIN_Output = []
-        for i in range (13) :
+        for i in range (14) :
             self.AIN_Output.append (tk.Label (self.master, textvariable=self.AIN_Var[i]))
             self.AIN_Output[i].grid (row=[i+1], column=0)
 
@@ -177,7 +177,8 @@ class Webit_GUI(tk.Frame):
         print('Not Configured')
 
     def Disconnect(self):
-        ljm.close(self.handle)
+        if self.IsConnected :
+            ljm.close(self.handle)
         self.IsConnected = False
         
     #Prints to terminal
