@@ -80,7 +80,7 @@ class Webit_GUI(tk.Frame):
         # make output fields for AIN values using tk.Label
         self.AIN_Output = []
         for i in range (14) :
-            self.AIN_Output.append (tk.Label (self.master, textvariable=self.AIN_Var[i]))
+            self.AIN_Output.append (tk.Label (self.master, textvariable=self.AIN_Var[i], justify=tk.LEFT))
             self.AIN_Output[i].grid (row=[i+1], column=0)
 
         self.master.after (1000, self.UpdateAIN)
@@ -112,33 +112,43 @@ class Webit_GUI(tk.Frame):
         
         self.SerialNumber = 0
         self.SerialNumber_Var = tk.StringVar ()
-        self.SerialNumber_Output = tk.Label(self.master, textvariable=self.SerialNumber_Var)
-        self.SerialNumber_Output.grid (row=5, column=2)
+        self.SerialNumber_Label = tk.Label (self.master, text='Serial Number')
+        self.SerialNumber_Label.grid (row=5, column=3, sticky=tk.W)
+        self.SerialNumber_Output = tk.Label(self.master, textvariable=self.SerialNumber_Var, justify=tk.LEFT)
+        self.SerialNumber_Output.grid (row=5, column=4, sticky=tk.W)
 
         self.IPaddress = '0.0.0.0'
         self.IPaddress_Var = tk.StringVar ()
+        self.IPaddress_Label = tk.Label (self.master, text='IP address')
+        self.IPaddress_Label.grid (row=6, column=3, sticky=tk.W)
         self.IPaddress_Output = tk.Label(self.master, textvariable=self.IPaddress_Var)
-        self.IPaddress_Output.grid (row=6, column=2)
+        self.IPaddress_Output.grid (row=6, column=4, sticky=tk.W)
 
         self.Port = 0
-        self.Port_Var = tk.StringVar ()
-        self.Port_Output = tk.Label(self.master, textvariable=self.Port_Var)
-        self.Port_Output.grid (row=7, column=2)
+        #self.Port_Var = tk.StringVar ()
+        #self.Port_Output = tk.Label(self.master, textvariable=self.Port_Var)
+        #self.Port_Output.grid (row=7, column=2, sticky='w')
 
         self.DeviceType = -1
         self.DeviceType_Var = tk.StringVar ()
+        self.DeviceType_Label = tk.Label (self.master, text='Device Type')
+        self.DeviceType_Label.grid (row=7, column=3, sticky=tk.W)
         self.DeviceType_Output = tk.Label(self.master, textvariable=self.DeviceType_Var)
-        self.DeviceType_Output.grid (row=8, column=2)
+        self.DeviceType_Output.grid (row=7, column=4, sticky=tk.W)
 
         self.ConnectionType = -1
         self.ConnectionType_Var = tk.StringVar ()
+        self.ConnectionType_Label = tk.Label (self.master, text='Connection Type')
+        self.ConnectionType_Label.grid (row=8, column=3, sticky=tk.W)
         self.ConnectionType_Output = tk.Label(self.master, textvariable=self.ConnectionType_Var)
-        self.ConnectionType_Output.grid (row=9, column=2)
+        self.ConnectionType_Output.grid (row=8, column=4, sticky=tk.W)
 
         self.MaxBytesPerMB = 0
         self.MaxBytesPerMB_Var = tk.StringVar ()
+        self.MaxBytesPerMB_Label = tk.Label (self.master, text='Max bytes per MB')
+        self.MaxBytesPerMB_Label.grid (row=9, column=3, sticky=tk.W)
         self.MaxBytesPerMB_Output = tk.Label (self.master, textvariable=self.MaxBytesPerMB_Var)
-        self.MaxBytesPerMB_Output.grid (row=10, column=2)
+        self.MaxBytesPerMB_Output.grid (row=9, column=4, sticky=tk.W)
         
         self.UpdateInfo ()
 
@@ -166,12 +176,17 @@ class Webit_GUI(tk.Frame):
         CT_string = 'NONE'
         if self.ConnectionType > -1 :
             CT_string = CT_string_list[self.ConnectionType]
-        self.SerialNumber_Var.set ("Serial Number {}".format (self.SerialNumber))
-        self.IPaddress_Var.set ("IP address {}".format (self.IPaddress))
-        self.Port_Var.set ("Port {}".format (self.Port))
-        self.DeviceType_Var.set ("DeviceType {}".format (self.DeviceType))
-        self.ConnectionType_Var.set ("Connection Type {} ({})".format (self.ConnectionType, CT_string))
-        self.MaxBytesPerMB_Var.set ("Max Bytes Per MB {}".format (self.MaxBytesPerMB))
+        #self.SerialNumber_Var.set ("Serial Number {}".format (self.SerialNumber))
+        self.SerialNumber_Var.set (self.SerialNumber)
+        #self.IPaddress_Var.set ("IP address {}".format (self.IPaddress))
+        #self.Port_Var.set ("Port {}".format (self.Port))
+        self.IPaddress_Var.set ("{}:{}".format (self.IPaddress, self.Port))
+        #self.DeviceType_Var.set ("DeviceType {}".format (self.DeviceType))
+        self.DeviceType_Var.set (self.DeviceType)
+        #self.ConnectionType_Var.set ("Connection Type {} ({})".format (self.ConnectionType, CT_string))
+        self.ConnectionType_Var.set ("{} ({})".format (self.ConnectionType, CT_string))
+        #self.MaxBytesPerMB_Var.set ("Max Bytes Per MB {}".format (self.MaxBytesPerMB))
+        self.MaxBytesPerMB_Var.set (self.MaxBytesPerMB)
         
     # This is a test to verify that the GUI is able to get the first Analog input 
     # The other outputs can easily be added if this works. 
@@ -271,17 +286,19 @@ if __name__ == "__main__":
 # TODO
 # assign channels and add conversions
 # print converted values
-# add setting DAC
-# test DAC by tying to AIN0 with a wire
+
+
 # add error handling for connect
 # change "UpdateStatus" to only update on connect or disconnect instead of every second
 # zero out device info on disconnect
-# add logging (need to record time - figure out best scheme)
-# logging should go to a file but also append to data stored in memory for plotting
-# add plotting (what is the optimal update frequency/strategy)
+# Renata: add logging (need to record time - figure out best scheme)
+# Renata: logging should go to a file but also append to data stored in memory for plotting
+# Renata: add plotting (what is the optimal update frequency/strategy)
 
 # make formatting better
+# one column for labels and another for values
+# remove justification
 
-
-# restrict entries to numbers
 # rename entry variables
+
+# make better error reporting for non-number DAC entries
