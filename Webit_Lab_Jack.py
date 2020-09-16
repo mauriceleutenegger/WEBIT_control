@@ -187,23 +187,41 @@ class Webit_GUI(tk.Frame):
 
 
     def Set_Anode(self) :
+        # first read the entry field
         name = "DAC0"
-        self.DAC_volts[0] = float (self.Entry_DAC0_Entry.get ()) # conversion is 1 V remote per 1 kV on anode
-        print (self.DAC_volts[0])
+        DAC0_Entry = self.Entry_DAC0_Entry.get ()
+        # check if it is a number
+        try : 
+            self.DAC_volts[0] = float (DAC0_Entry) # conversion is 1 V remote per 1 kV on anode
+        except ValueError :
+            # find a better way to do this than printing to the terminal
+            print ("Error getting entry for DAC0, value was {}".format (DAC0_Entry))
+            return
+        # print (self.DAC_volts[0])
+        # check bounds for valid number
         if self.DAC_volts[0] > 5. :
             print ("Can't set DAC0 volts {} > 5.".format (self.DAC_volts[0])) # limit of 5 V based on Bertan supply
             return
         if self.DAC_volts[0] < 0. :
             print ("Can't set DAC0 volts {} < 0.".format (self.DAC_volts[0]))
             return
+        # if everything is OK, set the new value on DAC0
         ljm.eWriteName(self.handle, name, self.DAC_volts[0])
+        return
 
     # need to set limit once we have the conversion for Ibuck
     def Set_IBuck(self):
         name = "DAC1"
-        self.DAC_volts[1] = float (self.Entry_DAC1_Entry.get ())  # and set conversion for I buck here
-        print (self.DAC_volts[1])
-        if self.DAC_volts[1] > 10. :
+        DAC1_Entry = self.Entry_DAC1_Entry.get ()
+        # check if it is a number
+        try : 
+            self.DAC_volts[1] = float (DAC1_Entry) # need to set conversion for I buck here
+        except ValueError :
+            # find a better way to do this than printing to the terminal
+            print ("Error getting entry for DAC1, value was {}".format (DAC1_Entry))
+            return
+        #print (self.DAC_volts[1])
+        if self.DAC_volts[1] > 10. : # need to set bounds
             print ("Can't set DAC1 volts {} > 10.".format (self.DAC_volts[1]))
             return
         if self.DAC_volts[1] < 0. :
