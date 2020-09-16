@@ -27,12 +27,12 @@ class Webit_GUI(tk.Frame):
         #Get_Info_Button.grid(row=0, column=6)
 
         SetAnodeButton = tk.Button(
-            self.master, text = 'Set', command=self.Set_Anode)
-        SetAnodeButton.grid(row=2, column=4)
+            self.master, text = 'Set Anode (kV)', command=self.Set_Anode)
+        SetAnodeButton.grid(row=1, column=4)
 
         SetIBuckButton = tk.Button(
-            self.master, text = 'Set', command=self.Set_IBuck)
-        SetIBuckButton.grid(row=1, column=4)
+            self.master, text = 'Set I_Buck (A)', command=self.Set_IBuck)
+        SetIBuckButton.grid(row=2, column=4)
 
         QuitButton = tk.Button(
             master,
@@ -86,17 +86,26 @@ class Webit_GUI(tk.Frame):
         self.master.after (1000, self.UpdateAIN)
         
         # Place holder. The plan is to read in the Anode and Bucking Coil above, and we
-        # set the values as input here. 
-        self.Entry_DAC0_Label = tk.Label(self.master, text="Anode: ")
-        self.Entry_DAC0_Label.grid(row=1, column=2)
+        # set the values as input here.
+
+        self.DAC_volts = []
+        for i in range (2) :
+            self.DAC_volts.append (0.)
+        
+        #self.Entry_DAC0_Label = tk.Label(self.master, text="Anode: ")
+        #self.Entry_DAC0_Label.grid(row=1, column=2)
         self.Entry_DAC0_Entry = tk.Entry(self.master)
         self.Entry_DAC0_Entry.grid(row=1, column=3)
-
-        self.Entry_DAC1_Label = tk.Label(self.master, text="Bucking Coil: ")
-        self.Entry_DAC1_Label.grid(row=2, column=2)
+        self.Entry_DAC0_Entry.insert ('end', 0) # default value
+        self.DAC_volts[0] = float (self.Entry_DAC0_Entry.get ())
+        
+        #self.Entry_DAC1_Label = tk.Label(self.master, text="Bucking Coil: ")
+        #self.Entry_DAC1_Label.grid(row=2, column=2)
         self.Entry_DAC1_Entry = tk.Entry(self.master)
         self.Entry_DAC1_Entry.grid(row=2, column=3)
-
+        self.Entry_DAC1_Entry.insert ('end', 0) # default value
+        self.DAC_volts[1] = float (self.Entry_DAC1_Entry.get ())
+        
         # make fields for serial number etc. :
 
         # These are centered, but maybe left justified would be better...
@@ -176,11 +185,31 @@ class Webit_GUI(tk.Frame):
         #print("\n%s state : %f" % (name, result))
         #self.Get_AIN0_Entry.insert(0, result)
 
-    # Lets verify that reading in works. 
-    def Set_Anode(self):
-        print('Not Configured')
+
+    def Set_Anode(self) :
+        name = "DAC0"
+        self.DAC_volts[0] = float (self.Entry_DAC0_Entry.get ()) # conversion is 1 V remote per 1 kV on anode
+        print (self.DAC_volts[0])
+        if self.DAC_volts[0] > 5. :
+            print ("Can't set DAC0 volts {} > 5.".format (self.DAC_volts[0])) # limit of 5 V based on Bertan supply
+            return
+        if self.DAC_volts[0] < 0. :
+            print ("Can't set DAC0 volts {} < 0.".format (self.DAC_volts[0]))
+            return
+        ljm.eWriteName(self.handle, name, self.DAC_volts[0])
+
+    # need to set limit once we have the conversion for Ibuck
     def Set_IBuck(self):
-        print('Not Configured')
+        name = "DAC1"
+        self.DAC_volts[1] = float (self.Entry_DAC1_Entry.get ())  # and set conversion for I buck here
+        print (self.DAC_volts[1])
+        if self.DAC_volts[1] > 10. :
+            print ("Can't set DAC1 volts {} > 10.".format (self.DAC_volts[1]))
+            return
+        if self.DAC_volts[1] < 0. :
+            print ("Can't set DAC1 volts {} < 0.".format (self.DAC_volts[1]))
+            return
+        ljm.eWriteName(self.handle, name, self.DAC_volts[1])
 
     def Disconnect(self):
         if self.IsConnected :
@@ -226,9 +255,15 @@ if __name__ == "__main__":
 # print converted values
 # add setting DAC
 # test DAC by tying to AIN0 with a wire
-# add error handling for connect (and disconnect?)
+# add error handling for connect
+# change "UpdateStatus" to only update on connect or disconnect instead of every second
+# zero out device info on disconnect
 # add logging (need to record time - figure out best scheme)
-# add plotting
+# logging should go to a file but also append to data stored in memory for plotting
+# add plotting (what is the optimal update frequency/strategy)
 
 # make formatting better
 
+
+# restrict entries to numbers
+# rename entry variables
