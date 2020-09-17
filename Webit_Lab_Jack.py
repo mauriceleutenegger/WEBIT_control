@@ -157,7 +157,12 @@ class Webit_GUI(tk.Frame):
 
         
     def Connect(self):
-        self.handle = ljm.openS("T7", "ANY", "ANY")  # T7 device, Any connection, Any identifier
+        try:
+            self.handle = ljm.openS("T7", "ANY", "ANY")  # T7 device, Any connection, Any identifier
+        except ljm.LJMError :
+            # make a better way to report the error
+            print ("LJM error while connecting - check if device is connected")
+            return
         self.IsConnected = True
         info = ljm.getHandleInfo(self.handle)
         self.DeviceType = info[0]
@@ -289,13 +294,14 @@ if __name__ == "__main__":
     app.mainloop()
 
 # TODO
+
+# change "UpdateStatus" to only update on connect or disconnect instead of every second
+
+# zero out device info on disconnect and also AIN values
+
 # assign AIN channels and add conversions
 # print converted values
 
-
-# add error handling for connect
-# change "UpdateStatus" to only update on connect or disconnect instead of every second
-# zero out device info on disconnect
 # Renata: add logging (need to record time - figure out best scheme)
 # Renata: logging should go to a file but also append to data stored in memory for plotting
 # Renata: add plotting (what is the optimal update frequency/strategy)
@@ -306,4 +312,4 @@ if __name__ == "__main__":
 
 # rename entry variables
 
-# make better error reporting for non-number DAC entries
+# make better error reporting for non-number DAC entries and connection failure
