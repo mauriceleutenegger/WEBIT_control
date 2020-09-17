@@ -94,18 +94,21 @@ class Webit_GUI(tk.Frame):
         
         #self.Entry_DAC0_Label = tk.Label(self.master, text="Anode: ")
         #self.Entry_DAC0_Label.grid(row=1, column=2)
-        self.Entry_DAC0_Entry = tk.Entry(self.master)
+        self.Entry_DAC0_Entry = tk.Entry(self.master, width=5)
         self.Entry_DAC0_Entry.grid(row=1, column=3)
         self.Entry_DAC0_Entry.insert ('end', 0) # default value
         self.DAC_volts[0] = float (self.Entry_DAC0_Entry.get ())
+        self.DAC0_Limit_Label = tk.Label (self.master, text='Allowed range: 0-5 kV')
+        self.DAC0_Limit_Label.grid (row=1, column=5, sticky=tk.W)
         
         #self.Entry_DAC1_Label = tk.Label(self.master, text="Bucking Coil: ")
         #self.Entry_DAC1_Label.grid(row=2, column=2)
-        self.Entry_DAC1_Entry = tk.Entry(self.master)
+        self.Entry_DAC1_Entry = tk.Entry(self.master, width=5)
         self.Entry_DAC1_Entry.grid(row=2, column=3)
         self.Entry_DAC1_Entry.insert ('end', 0) # default value
         self.DAC_volts[1] = float (self.Entry_DAC1_Entry.get ())
-        
+        self.DAC1_Limit_Label = tk.Label (self.master, text='Allowed range: 0-10 A')
+        self.DAC1_Limit_Label.grid (row=2, column=5, sticky=tk.W)
         # make fields for serial number etc. :
 
         # These are centered, but maybe left justified would be better...
@@ -212,7 +215,6 @@ class Webit_GUI(tk.Frame):
             # find a better way to do this than printing to the terminal
             print ("Error getting entry for DAC0, value was {}".format (DAC0_Entry))
             return
-        # print (self.DAC_volts[0])
         # check bounds for valid number
         if self.DAC_volts[0] > 5. :
             print ("Can't set DAC0 volts {} > 5.".format (self.DAC_volts[0])) # limit of 5 V based on Bertan supply
@@ -225,19 +227,22 @@ class Webit_GUI(tk.Frame):
         return
 
     # need to set limit once we have the conversion for Ibuck
+    # the conversion is that 1 V corresponds to the maximum value of I which is 10 A
+    # we may want to have a more stringent limit on current
+    # typical actual value for WEBIT is 5-6 A
     def Set_IBuck(self):
         name = "DAC1"
         DAC1_Entry = self.Entry_DAC1_Entry.get ()
         # check if it is a number
         try : 
-            self.DAC_volts[1] = float (DAC1_Entry) # need to set conversion for I buck here
+            self.DAC_volts[1] = 0.1 * float (DAC1_Entry) # conversion is 1 V = 10 A (max)
         except ValueError :
             # find a better way to do this than printing to the terminal
             print ("Error getting entry for DAC1, value was {}".format (DAC1_Entry))
             return
-        #print (self.DAC_volts[1])
-        if self.DAC_volts[1] > 10. : # need to set bounds
-            print ("Can't set DAC1 volts {} > 10.".format (self.DAC_volts[1]))
+        # set bounds for input voltage based on limits to Ibuck
+        if self.DAC_volts[1] > 10. :
+            print ("Can't set DAC1 volts {} > 1.".format (self.DAC_volts[1]))
             return
         if self.DAC_volts[1] < 0. :
             print ("Can't set DAC1 volts {} < 0.".format (self.DAC_volts[1]))
@@ -284,7 +289,7 @@ if __name__ == "__main__":
     app.mainloop()
 
 # TODO
-# assign channels and add conversions
+# assign AIN channels and add conversions
 # print converted values
 
 
