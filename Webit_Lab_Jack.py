@@ -82,20 +82,63 @@ class Webit_GUI(tk.Frame):
         self.DAC_volts = []
         for i in range (2) :
             self.DAC_volts.append (0.)
+        # corresponding values for the actual numbers
+        self.VAnode_setting = 0.
+        self.IBuck_setting = 0.
+
+        # stringvars for DACs and corresponding real numbers
+        self.DAC0_Var = tk.StringVar ()
+        self.DAC1_Var = tk.StringVar ()
+        self.VAnode_Var = tk.StringVar ()
+        self.IBuck_Var = tk.StringVar ()
+        self.DAC0_Var.set (0.)
+        self.DAC1_Var.set (0.)
+        self.VAnode_Var.set (0.)
+        self.IBuck_Var.set (0.)
         
+        # set up the entry boxes and reporting
         self.DAC0_Entry = tk.Entry(self.master, width=5)
         self.DAC0_Entry.grid(row=1, column=3)
         self.DAC0_Entry.insert ('end', 0) # default value
-        self.DAC_volts[0] = float (self.DAC0_Entry.get ())
+        #self.DAC_volts[0] = float (self.DAC0_Entry.get ())
         self.DAC0_Limit_Label = tk.Label (self.master, text='Allowed range: 0-5 kV')
-        self.DAC0_Limit_Label.grid (row=1, column=5, sticky=tk.W)
+        self.DAC0_Limit_Label.grid (row=1, column=9, sticky=tk.W)
+        # reporting
+        self.VAnode_Value_Label = tk.Label (self.master, text='VAnode (kV):')
+        self.VAnode_Value_Label.grid (row=1, column=5, sticky=tk.W)
+        self.VAnode_Value = tk.Label (self.master, textvariable=self.VAnode_Var)
+        self.VAnode_Value.grid (row=1, column=6, sticky=tk.W)
+        self.DAC0_Value_Label = tk.Label (self.master, text='DAC0 (V):')
+        self.DAC0_Value_Label.grid (row=1, column=7, sticky=tk.W)
+        self.DAC0_Value = tk.Label (self.master, textvariable=self.DAC0_Var)
+        self.DAC0_Value.grid (row=1, column=8, sticky=tk.W)
+
         
         self.DAC1_Entry = tk.Entry(self.master, width=5)
         self.DAC1_Entry.grid(row=2, column=3)
         self.DAC1_Entry.insert ('end', 0) # default value
         self.DAC_volts[1] = float (self.DAC1_Entry.get ())
         self.DAC1_Limit_Label = tk.Label (self.master, text='Allowed range: 0-10 A')
-        self.DAC1_Limit_Label.grid (row=2, column=5, sticky=tk.W)
+        self.DAC1_Limit_Label.grid (row=2, column=9, sticky=tk.W)
+        # reporting
+        self.IBuck_Value_Label = tk.Label (self.master, text='IBuck (A):')
+        self.IBuck_Value_Label.grid (row=2, column=5, sticky=tk.W)
+        self.IBuck_Value = tk.Label (self.master, textvariable=self.IBuck_Var)
+        self.IBuck_Value.grid (row=2, column=6, sticky=tk.W)
+        self.DAC1_Value_Label = tk.Label (self.master, text='DAC1 (V):')
+        self.DAC1_Value_Label.grid (row=2, column=7, sticky=tk.W)
+        self.DAC1_Value = tk.Label (self.master, textvariable=self.DAC1_Var)
+        self.DAC1_Value.grid (row=2, column=8, sticky=tk.W)
+
+        # heading for current settings
+        self.CurrentSettingsLabel = tk.Label (self.master, text='Current settings:')
+        self.CurrentSettingsLabel.grid (row=0, column=5, sticky=tk.W)
+
+        # broaden some of the columns for formatting
+        self.master.grid_columnconfigure(6, minsize=50)
+        self.master.grid_columnconfigure(7, minsize=100)
+        self.master.grid_columnconfigure(8, minsize=50)
+        
         # make fields for serial number etc. :
 
         # These are centered, but maybe left justified would be better...
@@ -183,23 +226,26 @@ class Webit_GUI(tk.Frame):
             print ("Not connected, not setting Anode.")
             return
         DAC0_Entry_String = self.DAC0_Entry.get () # read value from entry field
-        VAnode_setting = 0. # placeholder
+        self.VAnode_setting = 0. # placeholder
         # check if it is a number
         try :
-            VAnode_setting = float (DAC0_Entry_String)
+            self.VAnode_setting = float (DAC0_Entry_String)
         except ValueError :
             # find a better way to do this than printing to the terminal
             print ("Error getting entry for DAC0, value was {}".format (DAC0_Entry_String))
             return
         # enforce limits on VAnode
-        if VAnode_setting > 5. :
-            print ("Can't set Anode voltage {} > 5. kV".format (VAnode_setting)) # limit of 5 kV based on Bertan supply
+        if self.VAnode_setting > 5. :
+            print ("Can't set Anode voltage {} > 5. kV".format (self.VAnode_setting)) # limit of 5 kV based on Bertan supply
             return
-        if VAnode_setting < 0. :
-            print ("Can't set Anode volts {} < 0. kV".format (VAnode_setting))
+        if self.VAnode_setting < 0. :
+            print ("Can't set Anode volts {} < 0. kV".format (self.VAnode_setting))
             return
-        self.DAC_volts[0] = VAnode_setting # conversion is 1 V remote per 1 kV on anode
+        self.DAC_volts[0] = self.VAnode_setting # conversion is 1 V remote per 1 kV on anode
         ljm.eWriteName(self.handle, "DAC0", self.DAC_volts[0])
+        # update reporting
+        self.DAC0_Var.set (self.DAC_volts[0])
+        self.VAnode_Var.set (self.VAnode_setting)
         return
 
     # need to set limit once we have the conversion for Ibuck
@@ -211,23 +257,26 @@ class Webit_GUI(tk.Frame):
             print ("Not connected, not setting IBuck.")
             return
         DAC1_Entry_String = self.DAC1_Entry.get () # read value from entry field
-        IBuck_setting = 0. # placeholder
+        self.IBuck_setting = 0. # placeholder
         # check if it is a number
         try :
-            IBuck_setting = float (DAC1_Entry_String)
+            self.IBuck_setting = float (DAC1_Entry_String)
         except ValueError :
             # find a better way to do this than printing to the terminal
             print ("Error getting entry for DAC1, value was {}".format (DAC1_Entry_String))
             return
         # enforce limits on Ibuck
-        if IBuck_setting > 10. :
-            print ("Can't set IBuck current {} > 10. A".format (IBuck_setting))
+        if self.IBuck_setting > 10. :
+            print ("Can't set IBuck current {} > 10. A".format (self.IBuck_setting))
             return
-        if IBuck_setting < 0. :
-            print ("Can't set IBuck current {} < 0. A".format (IBuck_setting))
+        if self.IBuck_setting < 0. :
+            print ("Can't set IBuck current {} < 0. A".format (self.IBuck_setting))
             return
-        self.DAC_volts[1] = 0.1 * IBuck_setting # conversion is 1 V = 10 A (max)        
+        self.DAC_volts[1] = 0.1 * self.IBuck_setting # conversion is 1 V = 10 A (max)        
         ljm.eWriteName(self.handle, "DAC1", self.DAC_volts[1])
+        # update reporting
+        self.DAC1_Var.set (self.DAC_volts[1])
+        self.IBuck_Var.set (self.IBuck_setting)
         return
 
     def Disconnect(self):
@@ -288,6 +337,4 @@ if __name__ == "__main__":
 
 # make better error reporting for non-number DAC entries and connection failure
 
-# add reporting of currently set value
 
-# could make a new window that opens upon connection?
