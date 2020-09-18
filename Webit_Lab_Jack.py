@@ -66,17 +66,10 @@ class Webit_GUI(tk.Frame):
         self.AIN_Var = []
         for i in range (14) :
             self.AIN_Var.append (tk.StringVar ())
-            #self.AIN_Var[i].set (self.AIN[i])
             
         # initialize
         self.UpdateAIN_Vars ()
             
-        #Get_AIN0_Button = tk.Button(
-        #    self.master, text = 'Get Ain0', command=self.Get_Ain0)
-        #Get_AIN0_Button.grid(row=3, column=2)
-        #self.Get_AIN0_Entry = tk.Entry(self.master)
-        #self.Get_AIN0_Entry.grid(row=3, column=3)
-
         # make output fields for AIN values using tk.Label
         self.AIN_Output = []
         for i in range (14) :
@@ -84,29 +77,23 @@ class Webit_GUI(tk.Frame):
             self.AIN_Output[i].grid (row=[i+1], column=0)
 
         self.master.after (1000, self.UpdateAIN)
-        
-        # Place holder. The plan is to read in the Anode and Bucking Coil above, and we
-        # set the values as input here.
 
+        # entries for DAC0 and DAC1
         self.DAC_volts = []
         for i in range (2) :
             self.DAC_volts.append (0.)
         
-        #self.Entry_DAC0_Label = tk.Label(self.master, text="Anode: ")
-        #self.Entry_DAC0_Label.grid(row=1, column=2)
-        self.Entry_DAC0_Entry = tk.Entry(self.master, width=5)
-        self.Entry_DAC0_Entry.grid(row=1, column=3)
-        self.Entry_DAC0_Entry.insert ('end', 0) # default value
-        self.DAC_volts[0] = float (self.Entry_DAC0_Entry.get ())
+        self.DAC0_Entry = tk.Entry(self.master, width=5)
+        self.DAC0_Entry.grid(row=1, column=3)
+        self.DAC0_Entry.insert ('end', 0) # default value
+        self.DAC_volts[0] = float (self.DAC0_Entry.get ())
         self.DAC0_Limit_Label = tk.Label (self.master, text='Allowed range: 0-5 kV')
         self.DAC0_Limit_Label.grid (row=1, column=5, sticky=tk.W)
         
-        #self.Entry_DAC1_Label = tk.Label(self.master, text="Bucking Coil: ")
-        #self.Entry_DAC1_Label.grid(row=2, column=2)
-        self.Entry_DAC1_Entry = tk.Entry(self.master, width=5)
-        self.Entry_DAC1_Entry.grid(row=2, column=3)
-        self.Entry_DAC1_Entry.insert ('end', 0) # default value
-        self.DAC_volts[1] = float (self.Entry_DAC1_Entry.get ())
+        self.DAC1_Entry = tk.Entry(self.master, width=5)
+        self.DAC1_Entry.grid(row=2, column=3)
+        self.DAC1_Entry.insert ('end', 0) # default value
+        self.DAC_volts[1] = float (self.DAC1_Entry.get ())
         self.DAC1_Limit_Label = tk.Label (self.master, text='Allowed range: 0-10 A')
         self.DAC1_Limit_Label.grid (row=2, column=5, sticky=tk.W)
         # make fields for serial number etc. :
@@ -184,51 +171,35 @@ class Webit_GUI(tk.Frame):
         CT_string = 'NONE'
         if self.ConnectionType > -1 :
             CT_string = CT_string_list[self.ConnectionType]
-        #self.SerialNumber_Var.set ("Serial Number {}".format (self.SerialNumber))
         self.SerialNumber_Var.set (self.SerialNumber)
-        #self.IPaddress_Var.set ("IP address {}".format (self.IPaddress))
-        #self.Port_Var.set ("Port {}".format (self.Port))
         self.IPaddress_Var.set ("{}:{}".format (self.IPaddress, self.Port))
-        #self.DeviceType_Var.set ("DeviceType {}".format (self.DeviceType))
         self.DeviceType_Var.set (self.DeviceType)
-        #self.ConnectionType_Var.set ("Connection Type {} ({})".format (self.ConnectionType, CT_string))
         self.ConnectionType_Var.set ("{} ({})".format (self.ConnectionType, CT_string))
-        #self.MaxBytesPerMB_Var.set ("Max Bytes Per MB {}".format (self.MaxBytesPerMB))
         self.MaxBytesPerMB_Var.set (self.MaxBytesPerMB)
         
-    # This is a test to verify that the GUI is able to get the first Analog input 
-    # The other outputs can easily be added if this works. 
-    # This should print to the entry box next to AINO and to the terminal. 
-    #def Get_Ain0(self):
-        # TEST# It appears that the naming is as follows from the examples, but 
-        # the examples on the website look more like hte second name (AIN0)
-        # name = "FIO0"
-        #name = "AIN0"
-        #result = ljm.eReadName(self.handle, name)
-        #print("\n%s state : %f" % (name, result))
-        #self.Get_AIN0_Entry.insert(0, result)
-
 
     def Set_Anode(self) :
-        # first read the entry field
-        name = "DAC0"
-        DAC0_Entry = self.Entry_DAC0_Entry.get ()
+        if not self.IsConnected :
+            print ("Not connected, not setting Anode.")
+            return
+        DAC0_Entry_String = self.DAC0_Entry.get () # read value from entry field
+        VAnode_setting = 0. # placeholder
         # check if it is a number
-        try : 
-            self.DAC_volts[0] = float (DAC0_Entry) # conversion is 1 V remote per 1 kV on anode
+        try :
+            VAnode_setting = float (DAC0_Entry_String)
         except ValueError :
             # find a better way to do this than printing to the terminal
-            print ("Error getting entry for DAC0, value was {}".format (DAC0_Entry))
+            print ("Error getting entry for DAC0, value was {}".format (DAC0_Entry_String))
             return
-        # check bounds for valid number
-        if self.DAC_volts[0] > 5. :
-            print ("Can't set DAC0 volts {} > 5.".format (self.DAC_volts[0])) # limit of 5 V based on Bertan supply
+        # enforce limits on VAnode
+        if VAnode_setting > 5. :
+            print ("Can't set Anode voltage {} > 5. kV".format (VAnode_setting)) # limit of 5 kV based on Bertan supply
             return
-        if self.DAC_volts[0] < 0. :
-            print ("Can't set DAC0 volts {} < 0.".format (self.DAC_volts[0]))
+        if VAnode_setting < 0. :
+            print ("Can't set Anode volts {} < 0. kV".format (VAnode_setting))
             return
-        # if everything is OK, set the new value on DAC0
-        ljm.eWriteName(self.handle, name, self.DAC_volts[0])
+        self.DAC_volts[0] = VAnode_setting # conversion is 1 V remote per 1 kV on anode
+        ljm.eWriteName(self.handle, "DAC0", self.DAC_volts[0])
         return
 
     # need to set limit once we have the conversion for Ibuck
@@ -236,23 +207,28 @@ class Webit_GUI(tk.Frame):
     # we may want to have a more stringent limit on current
     # typical actual value for WEBIT is 5-6 A
     def Set_IBuck(self):
-        name = "DAC1"
-        DAC1_Entry = self.Entry_DAC1_Entry.get ()
+        if not self.IsConnected :
+            print ("Not connected, not setting IBuck.")
+            return
+        DAC1_Entry_String = self.DAC1_Entry.get () # read value from entry field
+        IBuck_setting = 0. # placeholder
         # check if it is a number
-        try : 
-            self.DAC_volts[1] = 0.1 * float (DAC1_Entry) # conversion is 1 V = 10 A (max)
+        try :
+            IBuck_setting = float (DAC1_Entry_String)
         except ValueError :
             # find a better way to do this than printing to the terminal
-            print ("Error getting entry for DAC1, value was {}".format (DAC1_Entry))
+            print ("Error getting entry for DAC1, value was {}".format (DAC1_Entry_String))
             return
-        # set bounds for input voltage based on limits to Ibuck
-        if self.DAC_volts[1] > 10. :
-            print ("Can't set DAC1 volts {} > 1.".format (self.DAC_volts[1]))
+        # enforce limits on Ibuck
+        if IBuck_setting > 10. :
+            print ("Can't set IBuck current {} > 10. A".format (IBuck_setting))
             return
-        if self.DAC_volts[1] < 0. :
-            print ("Can't set DAC1 volts {} < 0.".format (self.DAC_volts[1]))
+        if IBuck_setting < 0. :
+            print ("Can't set IBuck current {} < 0. A".format (IBuck_setting))
             return
-        ljm.eWriteName(self.handle, name, self.DAC_volts[1])
+        self.DAC_volts[1] = 0.1 * IBuck_setting # conversion is 1 V = 10 A (max)        
+        ljm.eWriteName(self.handle, "DAC1", self.DAC_volts[1])
+        return
 
     def Disconnect(self):
         if self.IsConnected :
@@ -310,6 +286,8 @@ if __name__ == "__main__":
 # one column for labels and another for values
 # remove justification
 
-# rename entry variables
-
 # make better error reporting for non-number DAC entries and connection failure
+
+# add reporting of currently set value
+
+# could make a new window that opens upon connection?
