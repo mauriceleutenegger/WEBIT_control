@@ -40,7 +40,7 @@ class Webit_GUI(tk.Frame):
             command=master.quit,
             width=15
         )
-        QuitButton.grid(row=0, column=4)
+        QuitButton.grid(row=0, column=10)
 
         # make an indicator to show if we are connected
         canvas_y = 18
@@ -57,6 +57,16 @@ class Webit_GUI(tk.Frame):
         self.ConnectedLED = self.ConnectedCanvas.create_oval(button_x0,button_y0,button_x1,button_y1, fill=self.LEDcolor)
         self.ConnectedCanvas.after (1000, self.UpdateStatus)
 
+
+        # add a ticker to indicate aliveness
+        self.tick_value = 0
+        self.TickerVar = tk.StringVar ()
+        self.TickerVar.set (self.tick_value)
+        self.TickerLabel = \
+            tk.Label (self.master, textvariable=self.TickerVar)
+        self.TickerLabel.grid (row=0,column=3,sticky=tk.W)
+        self.UpdateTicker ()
+        
         # make a list of AIN values, initialize to zero, and also corresponding real measured numbers
         self.AIN = []
         self.AIN_Real = []
@@ -316,7 +326,7 @@ class Webit_GUI(tk.Frame):
     #        (info[0], info[1], info[2], ljm.numberToIP(info[3]), info[4], info[5]))
 
     def UpdateAIN (self):
-        print ("Updating AIN")
+        #print ("Updating AIN")
         if self.IsConnected :
             #print ("Reading")
             numFrames = 14
@@ -347,6 +357,12 @@ class Webit_GUI(tk.Frame):
         self.AIN_Real[0] = self.AIN[0]         # AIN0: Vanode monitor
         self.AIN_Real[1] = self.AIN[1] * 10.0   # AIN1: Ibuck monitor
         #self.Pegun = self.AIN[2]
+
+    def UpdateTicker (self) :
+        self.tick_value += 1
+        self.TickerVar.set ("Tick:\t{}".format (self.tick_value))
+        self.master.after (1000, self.UpdateTicker)
+        return
         
 if __name__ == "__main__":
     root = tk.Tk()
@@ -356,22 +372,21 @@ if __name__ == "__main__":
 
 # TODO
 
+# Renata: add logging (need to record time - figure out best scheme)
+
+# Renata: logging should go to a file but also append to data stored in memory for plotting
+
+# Renata: add plotting (what is the optimal update frequency/strategy)
+
+# make better error reporting for non-number DAC entries and connection failure
+
 # change "UpdateStatus" to only update on connect or disconnect instead of every second
 
 # zero out device info on disconnect and also AIN values
 
-# assign AIN channels and add conversions
-# print converted values
+# assign all AIN channels and add conversions
 
-# Renata: add logging (need to record time - figure out best scheme)
-# Renata: logging should go to a file but also append to data stored in memory for plotting
-# Renata: add plotting (what is the optimal update frequency/strategy)
-
-# make formatting better
-# one column for labels and another for values
-# remove justification
-
-# make better error reporting for non-number DAC entries and connection failure
+# make an error reporting field in the GUI
 
 
 
