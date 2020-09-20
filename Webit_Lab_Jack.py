@@ -90,8 +90,8 @@ class Webit_GUI(tk.Frame):
         self.AIN_Real_Output = [] # corresponding "Real" parameter values
         self.AIN_Real_Names = ['Anode (kV)', 'Ibuck (A)',
                              'Pegun (torr)', 'Ptop (torr)', 'Pinj (torr)',
-                             'N/A', 'N/A', 'N/A',
-                             'N/A', 'N/A', 'N/A',
+                             'Ianode (uA)', 'N/A', 'N/A',
+                             'VMDT (kV)', 'N/A', 'N/A',
                              'N/A', 'N/A', 'N/A']
         for i in range (14) :
             row = i+1
@@ -373,8 +373,19 @@ class Webit_GUI(tk.Frame):
     def UpdateMonitorValues (self):
         self.AIN_Real[0] = self.AIN[0]         # AIN0: Vanode monitor
         self.AIN_Real[1] = self.AIN[1] * 10.0   # AIN1: Ibuck monitor
-        #self.Pegun = self.AIN[2]
+        self.AIN_Real[2] = self.ConvertPressure (self.AIN[2]) # Pegun (torr)
+        self.AIN_Real[3] = self.ConvertPressure (self.AIN[3]) # Ptop (torr)
+        self.AIN_Real[4] = self.ConvertPressure (self.AIN[4]) # Pinj (torr)
+        self.AIN_Real[5] = self.AIN[5] * 100. # Ianode (microamp)
+        # need to add conversions to these
+        #self.Icath = self.AIN[6]
+        #self.Icoll = self.AIN[7]
+        self.AIN_Real[8] = self.AIN[8] # VMDT (kV)
 
+    def ConvertPressure (v) : 
+        return 1.e-10 * 10.**(2. * v) # torr
+        
+        
     def UpdateTicker (self) :
         self.tick_value += 1
         self.TickerVar.set ("Tick:\t{}".format (self.tick_value))
@@ -399,13 +410,11 @@ if __name__ == "__main__":
 
 # Renata: add plotting (what is the optimal update frequency/strategy)
 
-# make better error reporting for non-number DAC entries and connection failure
-
 # change "UpdateStatus" to only update on connect or disconnect instead of every second
 
 # zero out device info on disconnect and also AIN values
 
-# assign all AIN channels and add conversions
+# assign the rest of the AIN channels and add conversions
 
 # make a "clear error" button
 
