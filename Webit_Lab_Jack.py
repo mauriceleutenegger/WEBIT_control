@@ -214,16 +214,27 @@ class Webit_GUI(tk.Frame):
         self.MaxBytesPerMB_Label.grid (row=9, column=5, sticky=tk.W)
         self.MaxBytesPerMB_Output = tk.Label (self.master, textvariable=self.MaxBytesPerMB_Var)
         self.MaxBytesPerMB_Output.grid (row=9, column=6, sticky=tk.W)
+
+        # add a field for error handling
+        self.ErrorText = "N/A"
+        self.Error_Var = tk.StringVar ()
+        self.Error_Var.set ("---")
+        self.Error_Label = tk.Label (self.master, textvariable=self.Error_Var)
+        self.Error_Label.grid (row=11, column=5, columnspan=4, rowspan=3,
+                               sticky=tk.W)
+        self.UpdateErrorText ()
         
         self.UpdateInfo ()
 
         
     def Connect(self):
         try:
-            self.handle = ljm.openS("T7", "ANY", "ANY")  # T7 device, Any connection, Any identifier
+            self.handle = ljm.openS("T7", "ANY", "ANY")
+            # T7 device, Any connection, Any identifier
         except ljm.LJMError :
-            # make a better way to report the error
-            print ("LJM error while connecting - check if device is connected")
+            self.ErrorText =\
+                "LJM error while connecting - check if device is connected"
+            self.UpdateErrorText ()
             return
         self.IsConnected = True
         info = ljm.getHandleInfo(self.handle)
@@ -257,7 +268,8 @@ class Webit_GUI(tk.Frame):
 
     def Set_Anode(self) :
         if not self.IsConnected :
-            print ("Not connected, not setting Anode.")
+            self.ErrorText = "Not connected, not setting Anode."
+            self.UpdateErrorText ()
             return
         DAC0_Entry_String = self.DAC0_Entry.get () # read value from entry field
         self.VAnode_setting = 0. # placeholder
@@ -265,15 +277,17 @@ class Webit_GUI(tk.Frame):
         try :
             self.VAnode_setting = float (DAC0_Entry_String)
         except ValueError :
-            # find a better way to do this than printing to the terminal
-            print ("Error getting entry for DAC0, value was {}".format (DAC0_Entry_String))
+            self.ErrorText = "Error getting entry for DAC0, value was {}".format (DAC0_Entry_String)
+            self.UpdateErrorText ()
             return
         # enforce limits on VAnode
         if self.VAnode_setting > 5. :
-            print ("Can't set Anode voltage {} > 5. kV".format (self.VAnode_setting)) # limit of 5 kV based on Bertan supply
+            self.ErrorText = "Can't set Anode voltage {} > 5. kV".format (self.VAnode_setting) # limit of 5 kV based on Bertan supply
+            self.UpdateErrorText ()
             return
         if self.VAnode_setting < 0. :
-            print ("Can't set Anode volts {} < 0. kV".format (self.VAnode_setting))
+            self.ErrorText = "Can't set Anode volts {} < 0. kV".format (self.VAnode_setting)
+            self.UpdateErrorText ()
             return
         self.DAC_volts[0] = self.VAnode_setting # conversion is 1 V remote per 1 kV on anode
         ljm.eWriteName(self.handle, "DAC0", self.DAC_volts[0])
@@ -288,7 +302,8 @@ class Webit_GUI(tk.Frame):
     # typical actual value for WEBIT is 5-6 A
     def Set_IBuck(self):
         if not self.IsConnected :
-            print ("Not connected, not setting IBuck.")
+            self.ErrorText = "Not connected, not setting IBuck."
+            self.UpdateErrorText ()
             return
         DAC1_Entry_String = self.DAC1_Entry.get () # read value from entry field
         self.IBuck_setting = 0. # placeholder
@@ -296,15 +311,17 @@ class Webit_GUI(tk.Frame):
         try :
             self.IBuck_setting = float (DAC1_Entry_String)
         except ValueError :
-            # find a better way to do this than printing to the terminal
-            print ("Error getting entry for DAC1, value was {}".format (DAC1_Entry_String))
+            self.ErrorText = "Error getting entry for DAC1, value was {}".format (DAC1_Entry_String)
+            self.UpdateErrorText ()
             return
         # enforce limits on Ibuck
         if self.IBuck_setting > 10. :
-            print ("Can't set IBuck current {} > 10. A".format (self.IBuck_setting))
+            self.ErrorText = "Can't set IBuck current {} > 10. A".format (self.IBuck_setting)
+            self.UpdateErrorText ()
             return
         if self.IBuck_setting < 0. :
-            print ("Can't set IBuck current {} < 0. A".format (self.IBuck_setting))
+            self.ErrorText = "Can't set IBuck current {} < 0. A".format (self.IBuck_setting)
+            self.UpdateErrorText ()
             return
         self.DAC_volts[1] = 0.1 * self.IBuck_setting # conversion is 1 V = 10 A (max)        
         ljm.eWriteName(self.handle, "DAC1", self.DAC_volts[1])
@@ -363,7 +380,11 @@ class Webit_GUI(tk.Frame):
         self.TickerVar.set ("Tick:\t{}".format (self.tick_value))
         self.master.after (1000, self.UpdateTicker)
         return
-        
+
+    def UpdateErrorText (self) :
+        print (self.ErrorText) # print to command line, serves as a log
+        self.Error_Var.set ("Most recent error: {}".format(self.ErrorText))
+    
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("WEBIT LabJack T7 GUI")
@@ -386,7 +407,7 @@ if __name__ == "__main__":
 
 # assign all AIN channels and add conversions
 
-# make an error reporting field in the GUI
+# make a "clear error" button
 
 
 
