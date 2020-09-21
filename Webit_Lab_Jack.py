@@ -3,6 +3,7 @@ from tkinter import ttk, Spinbox,Scrollbar
 from labjack import ljm
 from matplotlib import pyplot as plt
 from matplotlib import style
+import time
 
 class Webit_GUI(tk.Frame):
 
@@ -246,6 +247,7 @@ class Webit_GUI(tk.Frame):
         self.MaxBytesPerMB = info[5]
         self.UpdateInfo ()
 
+
     def UpdateAIN_Vars (self) :
         for i in range (14) :
             self.AIN_Var[i].set ("{:.3f}".format (self.AIN[i]))
@@ -355,14 +357,17 @@ class Webit_GUI(tk.Frame):
             self.UpdateAIN_Vars ()
         self.master.after (1000, self.UpdateAIN)
 
+
     def UpdateStatus (self):
         #print ("Updating Status")
         if self.IsConnected :
             self.LEDcolor = "green"
+            self.Update_Data_File()
         else :
             self.LEDcolor = "red"
         self.ConnectedCanvas.itemconfig(self.ConnectedLED, fill=self.LEDcolor)
         self.ConnectedCanvas.after (1000, self.UpdateStatus)
+        self.Update_Data_File()
 
     #The Bertan HV supplies use the following conversions:
     #current monitor: 1 V = 100 microAmp
@@ -381,6 +386,33 @@ class Webit_GUI(tk.Frame):
         #self.Icath = self.AIN[6]
         #self.Icoll = self.AIN[7]
         self.AIN_Real[8] = self.AIN[8] # VMDT (kV)
+
+    def Update_Data_File(self):
+        # AIN = [1.,2,3.,4.,5,6,7,8,9,10,11,12,13,14]
+        # AIN_Real = [15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+        AIN_Update = self.AIN.copy()
+        AIN_Update.insert(0, time.time())
+        self.AIN_Update_str = ','.join(str(i) for i in AIN_Update)
+
+        AIN_Real_Update = self.AIN_Real.copy()
+        AIN_Real_Update.insert(0, time.time())
+        self.AIN_Real_Update_str = ','.join(str(i) for i in AIN_Real_Update)
+
+
+        self.Write_AIN_Data()
+
+    def Write_AIN_Data(self):
+        # AIN_FNAME = 'AIN_File{}.dat'.format(time.time())
+        AIN_FNAME = 'AIN_File.dat'
+        AIN_REAL_FNAME = 'AIN_REAL_File.dat'
+
+        with open(AIN_FNAME, "a") as text_file:
+            print(self.AIN_Update_str)
+            text_file.write(self.AIN_Update_str + "\n")
+
+        with open(AIN_REAL_FNAME, "a") as text_file:
+            print(self.AIN_Real_Update_str)
+            text_file.write(self.AIN_Real_Update_str + "\n")
 
     def ConvertPressure (v) : 
         return 1.e-10 * 10.**(2. * v) # torr
