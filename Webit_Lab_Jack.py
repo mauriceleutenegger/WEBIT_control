@@ -414,7 +414,7 @@ class Webit_GUI(tk.Frame):
             print(self.AIN_Real_Update_str)
             text_file.write(self.AIN_Real_Update_str + "\n")
 
-    def ConvertPressure (v) : 
+    def ConvertPressure (self, v) : 
         return 1.e-10 * 10.**(2. * v) # torr
         
         
