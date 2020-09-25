@@ -2,7 +2,10 @@ import tkinter as tk
 from tkinter import ttk, Spinbox,Scrollbar
 from labjack import ljm
 from matplotlib import pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.animation as animation
 from matplotlib import style
+import numpy as np
 import time
 
 class Webit_GUI(tk.Frame):
@@ -11,6 +14,16 @@ class Webit_GUI(tk.Frame):
 
         self.IsConnected = False # should make an indicator for this
         self.handle = None # placeholder
+
+        # Set the file name based on the start time. 
+        # Currently using time since lest epoch. Other times might be neater.
+        self.startTime = time.time()
+        # self.AIN_FNAME = 'AIN_File{}.dat'.format(self.startTime)
+        # self.AIN_REAL_FNAME = 'AIN_REAL_File{}.dat'.format(self.startTime)
+        # While testing- use basic file name.
+        self.AIN_FNAME = 'AIN_File.dat'
+        self.AIN_REAL_FNAME = 'AIN_REAL_File.dat'
+
 
         # Initializes the frame
         tk.Frame.__init__(self, master)
@@ -22,10 +35,6 @@ class Webit_GUI(tk.Frame):
         disconnectButton = tk.Button(
             self.master, text = 'Disconnect', command=self.Disconnect)
         disconnectButton.grid(row=0, column=1)
-
-        #Get_Info_Button = tk.Button(
-        #    self.master, text = 'Get Info', command=self.Get_Info)
-        #Get_Info_Button.grid(row=0, column=6)
 
         SetAnodeButton = tk.Button(
             self.master, text = 'Set Anode (kV)', command=self.Set_Anode)
@@ -71,9 +80,13 @@ class Webit_GUI(tk.Frame):
         # make a list of AIN values, initialize to zero, and also corresponding real measured numbers
         self.AIN = []
         self.AIN_Real = []
+        self.AIN_Update = []
+        self.AIN_Real_Update = []
         for i in range (14) :
             self.AIN.append (0.)
             self.AIN_Real.append (0.)
+            self.AIN_Update.append (0.)
+            self.AIN_Real_Update.append (0.)
 
         # make a list of StringVars to feed to the label widgets 
         self.AIN_Var = []
@@ -110,6 +123,7 @@ class Webit_GUI(tk.Frame):
             self.AIN_Real_Output[i].grid (row=row, column=3, sticky=tk.W)
             
         self.master.after (1000, self.UpdateAIN)
+
 
         # entries for DAC0 and DAC1
         self.DAC_volts = []
@@ -227,6 +241,40 @@ class Webit_GUI(tk.Frame):
         
         self.UpdateInfo ()
 
+# PLOTTING #####################################################################
+        # In progress. 
+        # Here we set up the plot, in the animate function we update the plot. 
+        # Currently updating every 1 s.
+        # Update interval set in MAIN when GUI is created. 
+        # animation is created in main. 
+
+        # Currently : 2x2 subplots.
+        # Can set X and Y limits here, not in GUI though.
+ 
+        # This is initialized upon starting GUI. Not preferred, but seems to be
+        # Working. 
+
+        self.fig = plt.figure(figsize=(12, 4.5), dpi=100)
+
+        self.ax = self.fig.add_subplot(2,2,1)
+        self.ax.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        self.ax.set_xlabel('Time (s)')
+        self.ax.set_ylabel('Anode Voltage (kV)')
+        self.line, = self.ax.plot(xar, yar)
+        # self.ax.set_title('ax1 title')
+
+        self.ax2 = self.fig.add_subplot(2,2,2)
+        self.ax2.set_ylim(-1, 10) # Note: Modify for correc limits.
+        self.line2, = self.ax2.plot(xar, yar) 
+        self.ax2.set_xlabel('Time (s)')
+        self.ax2.set_ylabel('Bucking Coil Current (A)')
+        # self.ax2.set_title('ax2 title')
+
+        self.AINcanvas = FigureCanvasTkAgg(self.fig, master=self.master)
+        self.AINcanvas.draw()
+        self.AINcanvas.get_tk_widget().grid(row=15, column=0, columnspan=10, rowspan=25,
+                               sticky=tk.W)
+# PLOTTING #####################################################################
         
     def Connect(self):
         try:
@@ -246,6 +294,7 @@ class Webit_GUI(tk.Frame):
         self.Port = info[4]
         self.MaxBytesPerMB = info[5]
         self.UpdateInfo ()
+        ani = animation.FuncAnimation(app.fig, app.animate, interval=1000, blit=False)
 
 
     def UpdateAIN_Vars (self) :
@@ -253,6 +302,8 @@ class Webit_GUI(tk.Frame):
             self.AIN_Var[i].set ("{:.3f}".format (self.AIN[i]))
         for i in range (14):
             self.AIN_Real_Var[i].set ("{:.3f}".format(self.AIN_Real[i]))
+            # self.AIN_Real[0] = self.startTime-time.time()
+        
             
     def UpdateInfo (self) :
         # connection types
@@ -336,13 +387,6 @@ class Webit_GUI(tk.Frame):
         if self.IsConnected :
             ljm.close(self.handle)
         self.IsConnected = False
-        
-    #Prints to terminal
-    #def Get_Info(self):
-    #    info = ljm.getHandleInfo(self.handle)
-    #    print("Opened a LabJack with Device type: %i, Connection type: %i,\n"
-    #        "Serial number: %i, IP address: %s, Port: %i,\nMax bytes per MB: %i" %
-    #        (info[0], info[1], info[2], ljm.numberToIP(info[3]), info[4], info[5]))
 
     def UpdateAIN (self):
         #print ("Updating AIN")
@@ -355,19 +399,19 @@ class Webit_GUI(tk.Frame):
             #print (self.AIN)
             self.UpdateMonitorValues ()
             self.UpdateAIN_Vars ()
+        self.Update_Data_File()     
         self.master.after (1000, self.UpdateAIN)
-
+        
 
     def UpdateStatus (self):
         #print ("Updating Status")
         if self.IsConnected :
             self.LEDcolor = "green"
-            self.Update_Data_File()
         else :
             self.LEDcolor = "red"
         self.ConnectedCanvas.itemconfig(self.ConnectedLED, fill=self.LEDcolor)
         self.ConnectedCanvas.after (1000, self.UpdateStatus)
-        self.Update_Data_File()
+
 
     #The Bertan HV supplies use the following conversions:
     #current monitor: 1 V = 100 microAmp
@@ -387,32 +431,39 @@ class Webit_GUI(tk.Frame):
         #self.Icoll = self.AIN[7]
         self.AIN_Real[8] = self.AIN[8] # VMDT (kV)
 
+
+    # Append time to Ain_Real and AIN in new list, and save as string. 
+    # Call "write_AIN_Data" fucntion to write to file. 
+    # New list is sent to "animate" function for plotting.
     def Update_Data_File(self):
-        # AIN = [1.,2,3.,4.,5,6,7,8,9,10,11,12,13,14]
-        # AIN_Real = [15,16,17,18,19,20,21,22,23,24,25,26,27,28]
-        AIN_Update = self.AIN.copy()
-        AIN_Update.insert(0, time.time())
-        self.AIN_Update_str = ','.join(str(i) for i in AIN_Update)
+        Current_time = time.time()
+        self.AIN_Update = self.AIN.copy()
+        self.AIN_Update.insert(0, Current_time)
 
-        AIN_Real_Update = self.AIN_Real.copy()
-        AIN_Real_Update.insert(0, time.time())
-        self.AIN_Real_Update_str = ','.join(str(i) for i in AIN_Real_Update)
-
-
+        self.AIN_Real_Update = self.AIN_Real.copy()
+        self.AIN_Real_Update.insert(0, Current_time)
         self.Write_AIN_Data()
 
     def Write_AIN_Data(self):
-        # AIN_FNAME = 'AIN_File{}.dat'.format(time.time())
-        AIN_FNAME = 'AIN_File.dat'
-        AIN_REAL_FNAME = 'AIN_REAL_File.dat'
+        AIN_Update_str = ','.join(str(i) for i in self.AIN_Update)
+        AIN_Real_Update_str = ','.join(str(i) for i in self.AIN_Real_Update)
 
-        with open(AIN_FNAME, "a") as text_file:
-            print(self.AIN_Update_str)
-            text_file.write(self.AIN_Update_str + "\n")
+        with open(self.AIN_FNAME, "a") as self.Ain_File:
+            self.Ain_File.write(AIN_Update_str + "\n")
 
-        with open(AIN_REAL_FNAME, "a") as text_file:
-            print(self.AIN_Real_Update_str)
-            text_file.write(self.AIN_Real_Update_str + "\n")
+        with open(self.AIN_REAL_FNAME, "a") as self.Real_Ain_File:
+            self.Real_Ain_File.write(AIN_Real_Update_str + "\n")
+
+    def animate(self,i):
+        xar.append(self.AIN_Real_Update[0])
+        yarAnode.append(self.AIN_Real_Update[1])
+        yarIbuck.append(self.AIN_Real_Update[2])
+
+        self.line.set_data(xar, yarAnode)
+        self.ax.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.line2.set_data(xar, self.AIN_Real[1])
+        self.ax2.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
 
     def ConvertPressure (self, v) : 
         return 1.e-10 * 10.**(2. * v) # torr
@@ -429,18 +480,32 @@ class Webit_GUI(tk.Frame):
         self.Error_Var.set ("Most recent error: {}".format(self.ErrorText))
     
 if __name__ == "__main__":
+    
+    xar = []
+    yar = []
+    yarAnode = []
+    yarIbuck = []
     root = tk.Tk()
     root.title("WEBIT LabJack T7 GUI")
     app = Webit_GUI(root)
+    ani = animation.FuncAnimation(app.fig, app.animate, interval=1000, blit=False)
+
     app.mainloop()
 
 # TODO
 
 # Renata: add logging (need to record time - figure out best scheme)
+        #Time since last epoch works, but is not clean. 
 
 # Renata: logging should go to a file but also append to data stored in memory for plotting
+        # Two files. 
+        # AIN_Real_Update and AIN_Update are written to file as indicvidual lines.
+        # Then they are stored in arrays for plotting (xarr, yarAnode, yarIbuck)
+        # Better option would possibly be to save all to a single array.
 
 # Renata: add plotting (what is the optimal update frequency/strategy)
+        # As it is working now, it seems fine to update each second. Not sure 
+        # how this will be do after many seconds.
 
 # change "UpdateStatus" to only update on connect or disconnect instead of every second
 
@@ -449,6 +514,11 @@ if __name__ == "__main__":
 # assign the rest of the AIN channels and add conversions
 
 # make a "clear error" button
+
+# Renata: Plotting: Modify axes.
+        # Possibly plot for a specific range, and allow the x-axis to be modified.
+        
+
 
 
 
