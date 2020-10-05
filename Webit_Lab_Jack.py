@@ -255,24 +255,26 @@ class Webit_GUI(tk.Frame):
         # Working. 
 
         self.fig = plt.figure(figsize=(12, 4.5), dpi=100)
+        self.Ain_fig = plt.figure("WEBIT Parameters")
 
-        self.ax = self.fig.add_subplot(2,2,1)
+
+        self.ax = self.fig.add_subplot(1,1,1)
         self.ax.set_ylim(-1, 10) # Note: Modify for correct limits. 
         self.ax.set_xlabel('Time (s)')
         self.ax.set_ylabel('Anode Voltage (kV)')
         self.line, = self.ax.plot(xar, yar)
         # self.ax.set_title('ax1 title')
 
-        self.ax2 = self.fig.add_subplot(2,2,2)
-        self.ax2.set_ylim(-1, 10) # Note: Modify for correc limits.
-        self.line2, = self.ax2.plot(xar, yar) 
-        self.ax2.set_xlabel('Time (s)')
-        self.ax2.set_ylabel('Bucking Coil Current (A)')
-        # self.ax2.set_title('ax2 title')
+        # self.ax2 = self.fig.add_subplot(2,2,2)
+        # self.ax2.set_ylim(-1, 10) # Note: Modify for correc limits.
+        # self.line2, = self.ax2.plot(xar, yar) 
+        # self.ax2.set_xlabel('Time (s)')
+        # self.ax2.set_ylabel('Bucking Coil Current (A)')
+        # # self.ax2.set_title('ax2 title')
 
         self.AINcanvas = FigureCanvasTkAgg(self.fig, master=self.master)
         self.AINcanvas.draw()
-        self.AINcanvas.get_tk_widget().grid(row=15, column=0, columnspan=10, rowspan=25,
+        self.AINcanvas.get_tk_widget().grid(row=15, column=0, columnspan=8, rowspan=3,
                                sticky=tk.W)
 # PLOTTING #####################################################################
         
@@ -294,7 +296,8 @@ class Webit_GUI(tk.Frame):
         self.Port = info[4]
         self.MaxBytesPerMB = info[5]
         self.UpdateInfo ()
-        ani = animation.FuncAnimation(app.fig, app.animate, interval=1000, blit=False)
+        self.Plot_Ain()     #plot once connected. 
+
 
 
     def UpdateAIN_Vars (self) :
@@ -454,6 +457,7 @@ class Webit_GUI(tk.Frame):
         with open(self.AIN_REAL_FNAME, "a") as self.Real_Ain_File:
             self.Real_Ain_File.write(AIN_Real_Update_str + "\n")
 
+#   Animate the GUI Anode Volatage. 
     def animate(self,i):
         xar.append(self.AIN_Real_Update[0])
         yarAnode.append(self.AIN_Real_Update[1])
@@ -462,8 +466,86 @@ class Webit_GUI(tk.Frame):
         self.line.set_data(xar, yarAnode)
         self.ax.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
 
-        self.line2.set_data(xar, self.AIN_Real[1])
+#   Animate the Fig window including Ain0-6.
+#   The X-axis limit is updated here in set_xlim
+#   The data is updated in set_data.
+#   The (x and y) data is first appended to arrays.
+#   These arrays are initialated in MAIN- required for the animation. 
+#   Note that the first element in the Ain_Real_Updatee is Time, so each Ain 
+#   index # is increased by 1. 
+    def animate_Ain(self,i):
+        xarrTime.append(self.AIN_Real_Update[0])
+
+        yarrAnode.append(self.AIN_Real_Update[1])
+        yarrIbuck.append(self.AIN_Real_Update[2])
+        yarrpegun.append(self.AIN_Real_Update[3])
+        yarrptop.append(self.AIN_Real_Update[4])
+        yarrpinj.append(self.AIN_Real_Update[5])
+        yarrianode.append(self.AIN_Real_Update[6])
+
+        self.line1.set_data(xarrTime, yarrAnode)
+        self.ax1.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.line2.set_data(xarrTime, yarrIbuck)
         self.ax2.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.line3.set_data(xarrTime, yarrpegun)
+        self.ax3.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.line4.set_data(xarrTime, yarrptop)
+        self.ax4.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.line5.set_data(xarrTime, yarrpinj)
+        self.ax5.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.line6.set_data(xarrTime, yarrianode)
+        self.ax6.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+    
+#   Here, the Figure window is initialated.  Right now this is called in "Connected"
+#   The Y- limits need to be updated here. They could possibly be animated in
+#   "animate_Ain"
+    def Plot_Ain(self):
+        # self.ax1.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+        self.ax1 = self.Ain_fig.add_subplot(3,2,1)
+        self.ax1.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        # self.ax1.set_xlabel('Time (s)')
+        self.ax1.set_ylabel('Anode Voltage (kV)')
+        self.line1, = self.ax1.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[1])
+
+        self.ax2 = self.Ain_fig.add_subplot(3,2,2)
+        self.ax2.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        # self.ax2.set_xlabel('Time (s)')
+        self.ax2.set_ylabel('Bucking Coil (A)')
+        self.line2, = self.ax2.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[2])
+
+        self.ax3 = self.Ain_fig.add_subplot(3,2,3)
+        self.ax3.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        # self.ax3.set_xlabel('Time (s)')
+        self.ax3.set_ylabel('Pegun (torr')
+        self.line3, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[3])
+
+        self.ax4 = self.Ain_fig.add_subplot(3,2,4)
+        self.ax4.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        # self.ax4.set_xlabel('Time (s)')
+        self.ax4.set_ylabel('Pinj (torr)')
+        self.line4, = self.ax4.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[4])
+
+        self.ax5 = self.Ain_fig.add_subplot(3,2,5)
+        self.ax5.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        self.ax5.set_xlabel('Time (s)')
+        self.ax5.set_ylabel('I Anode(uA)')
+        self.line5, = self.ax5.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[5])
+
+        self.ax6 = self.Ain_fig.add_subplot(3,2,6)
+        self.ax6.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        self.ax6.set_xlabel('Time (s)')
+        self.ax6.set_ylabel('Pegun (torr)')
+        self.line6, = self.ax6.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[6])
+
+
+        self.Ain_fig.subplots_adjust(hspace=.5,wspace = 0.3)
+        self.Ain_fig.show()
 
     def ConvertPressure (self, v) : 
         return 1.e-10 * 10.**(2. * v) # torr
@@ -481,31 +563,33 @@ class Webit_GUI(tk.Frame):
     
 if __name__ == "__main__":
     
-    xar = []
-    yar = []
     yarAnode = []
-    yarIbuck = []
+    yarIbuck = []  
+
+    xar = []   
+    yar = []
+    xarrTime = []
+    yarrAnode = []
+    yarrIbuck = []
+    yarrpegun = []
+    yarrptop = []
+    yarrpinj = []
+    yarrianode = []
     root = tk.Tk()
     root.title("WEBIT LabJack T7 GUI")
     app = Webit_GUI(root)
+    # GUI Plot
     ani = animation.FuncAnimation(app.fig, app.animate, interval=1000, blit=False)
+    # Separate Plot Window
+    ani_AIN = animation.FuncAnimation(app.Ain_fig, app.animate_Ain, interval=1000, blit=False)
 
     app.mainloop()
 
 # TODO
 
 # Renata: add logging (need to record time - figure out best scheme)
-        #Time since last epoch works, but is not clean. 
+        #Time since last epoch works, but might not be clean. 
 
-# Renata: logging should go to a file but also append to data stored in memory for plotting
-        # Two files. 
-        # AIN_Real_Update and AIN_Update are written to file as indicvidual lines.
-        # Then they are stored in arrays for plotting (xarr, yarAnode, yarIbuck)
-        # Better option would possibly be to save all to a single array.
-
-# Renata: add plotting (what is the optimal update frequency/strategy)
-        # As it is working now, it seems fine to update each second. Not sure 
-        # how this will be do after many seconds.
 
 # change "UpdateStatus" to only update on connect or disconnect instead of every second
 
@@ -515,9 +599,20 @@ if __name__ == "__main__":
 
 # make a "clear error" button
 
-# Renata: Plotting: Modify axes.
+# Renata: Plotting: 
+    # Allow modifyication of axes.
         # Possibly plot for a specific range, and allow the x-axis to be modified.
-        
+        # update y-axes for apprpriate values
+    # Only allows opening the figure window first time it is connected- possibly 
+        # an easy fix.
+    # Need appropriate y- range, or alllow the y-axis to vary based on current values.
+    # Do we want 12 plots? 
+    # Can we save the zoomed X-axis? 
+
+
+
+
+
 
 
 
