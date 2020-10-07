@@ -287,7 +287,7 @@ class Webit_GUI(tk.Frame):
         for i in range (14) :
             self.AIN_Var[i].set ("{:.3f}".format (self.AIN[i]))
         for i in range (14):
-            self.AIN_Real_Var[i].set ("{:.3f}".format(self.AIN_Real[i]))
+            self.AIN_Real_Var[i].set ("{:.3e}".format(self.AIN_Real[i]))
             # self.AIN_Real[0] = self.startTime-time.time()
         
             
