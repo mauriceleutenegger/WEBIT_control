@@ -52,6 +52,13 @@ class Webit_GUI(tk.Frame):
         )
         QuitButton.grid(row=0, column=10)
 
+        PlotButton = tk.Button(
+            master,
+            text = 'Plot',
+            command=self.Plot,
+            width=15
+        )
+        PlotButton.grid(row=0, column=9)
         # make an indicator to show if we are connected
         canvas_y = 18
         self.ConnectedCanvas = tk.Canvas (self.master, width=150, height=30)
@@ -242,43 +249,20 @@ class Webit_GUI(tk.Frame):
         self.UpdateInfo ()
 
 # PLOTTING #####################################################################
-        # In progress. 
         # Here we set up the plot, in the animate function we update the plot. 
         # Currently updating every 1 s.
         # Update interval set in MAIN when GUI is created. 
         # animation is created in main. 
 
-        # Currently : 2x2 subplots.
-        # Can set X and Y limits here, not in GUI though.
- 
-        # This is initialized upon starting GUI. Not preferred, but seems to be
-        # Working. 
-
-        self.fig = plt.figure(figsize=(12, 4.5), dpi=100)
         self.Ain_fig = plt.figure("WEBIT Parameters")
+        animation.FuncAnimation(self.Ain_fig, self.animate_init, interval=1000, blit=False)
 
 
-        self.ax = self.fig.add_subplot(1,1,1)
-        self.ax.set_ylim(-1, 10) # Note: Modify for correct limits. 
-        self.ax.set_xlabel('Time (s)')
-        self.ax.set_ylabel('Anode Voltage (kV)')
-        self.line, = self.ax.plot(xar, yar)
-        # self.ax.set_title('ax1 title')
-
-        # self.ax2 = self.fig.add_subplot(2,2,2)
-        # self.ax2.set_ylim(-1, 10) # Note: Modify for correc limits.
-        # self.line2, = self.ax2.plot(xar, yar) 
-        # self.ax2.set_xlabel('Time (s)')
-        # self.ax2.set_ylabel('Bucking Coil Current (A)')
-        # # self.ax2.set_title('ax2 title')
-
-        self.AINcanvas = FigureCanvasTkAgg(self.fig, master=self.master)
-        self.AINcanvas.draw()
-        self.AINcanvas.get_tk_widget().grid(row=15, column=0, columnspan=8, rowspan=3,
-                               sticky=tk.W)
 # PLOTTING #####################################################################
         
     def Connect(self):
+        self.animate()     #plot once connected. 
+
         try:
             self.handle = ljm.openS("T7", "ANY", "ANY")
             # T7 device, Any connection, Any identifier
@@ -296,7 +280,6 @@ class Webit_GUI(tk.Frame):
         self.Port = info[4]
         self.MaxBytesPerMB = info[5]
         self.UpdateInfo ()
-        self.Plot_Ain()     #plot once connected. 
 
 
 
@@ -458,13 +441,18 @@ class Webit_GUI(tk.Frame):
             self.Real_Ain_File.write(AIN_Real_Update_str + "\n")
 
 #   Animate the GUI Anode Volatage. 
-    def animate(self,i):
-        xar.append(self.AIN_Real_Update[0])
-        yarAnode.append(self.AIN_Real_Update[1])
-        yarIbuck.append(self.AIN_Real_Update[2])
+    # def animate(self,i):
+    #     xar.append(self.AIN_Real_Update[0])
+    #     yarAnode.append(self.AIN_Real_Update[1])
+    #     yarIbuck.append(self.AIN_Real_Update[2])
 
-        self.line.set_data(xar, yarAnode)
-        self.ax.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+    #     self.line.set_data(xar, yarAnode)
+    #     self.ax.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
+
+    def Plot(self):
+        # self.Ain_fig = plt.figure("WEBIT Parameters")
+        # animation.FuncAnimation(self.Ain_fig, self.animate_init, interval=1000, blit=False)
+        self.animate()
 
 #   Animate the Fig window including Ain0-6.
 #   The X-axis limit is updated here in set_xlim
@@ -473,7 +461,7 @@ class Webit_GUI(tk.Frame):
 #   These arrays are initialated in MAIN- required for the animation. 
 #   Note that the first element in the Ain_Real_Updatee is Time, so each Ain 
 #   index # is increased by 1. 
-    def animate_Ain(self,i):
+    def animate_init(self,i):
         xarrTime.append(self.AIN_Real_Update[0])
 
         yarrAnode.append(self.AIN_Real_Update[1])
@@ -503,8 +491,8 @@ class Webit_GUI(tk.Frame):
     
 #   Here, the Figure window is initialated.  Right now this is called in "Connected"
 #   The Y- limits need to be updated here. They could possibly be animated in
-#   "animate_Ain"
-    def Plot_Ain(self):
+#   "animate_init"
+    def animate(self):
         # self.ax1.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
 
         self.ax1 = self.Ain_fig.add_subplot(3,2,1)
@@ -520,31 +508,41 @@ class Webit_GUI(tk.Frame):
         self.line2, = self.ax2.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[2])
 
         self.ax3 = self.Ain_fig.add_subplot(3,2,3)
-        self.ax3.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        # self.ax3.set_ylim(0.0e-10, 0.0e-4) # Note: Modify for correct limits. 
         # self.ax3.set_xlabel('Time (s)')
+        # self.ax3.set_yscale('log')
         self.ax3.set_ylabel('Pegun (torr')
         self.line3, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[3])
+        self.line3.set_label('Pegun')
+
+        # self.line4, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[4])
+        # self.line4.set_label('Ptop')
+
+        # self.line6, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[6])
+        # self.line6.set_label('Pinj')
 
         self.ax4 = self.Ain_fig.add_subplot(3,2,4)
-        self.ax4.set_ylim(-1, 10) # Note: Modify for correct limits. 
-        # self.ax4.set_xlabel('Time (s)')
+        # self.ax4.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        self.ax4.set_xlabel('Time (s)')
         self.ax4.set_ylabel('Pinj (torr)')
         self.line4, = self.ax4.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[4])
 
         self.ax5 = self.Ain_fig.add_subplot(3,2,5)
         self.ax5.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        
         self.ax5.set_xlabel('Time (s)')
         self.ax5.set_ylabel('I Anode(uA)')
         self.line5, = self.ax5.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[5])
 
         self.ax6 = self.Ain_fig.add_subplot(3,2,6)
-        self.ax6.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        # self.ax6.set_ylim(-1, 10) # Note: Modify for correct limits. 
         self.ax6.set_xlabel('Time (s)')
-        self.ax6.set_ylabel('Pegun (torr)')
+        self.ax6.set_ylabel('Ptop (torr)')
         self.line6, = self.ax6.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[6])
 
 
         self.Ain_fig.subplots_adjust(hspace=.5,wspace = 0.3)
+        plt.legend()
         self.Ain_fig.show()
 
     def ConvertPressure (self, v) : 
@@ -579,9 +577,9 @@ if __name__ == "__main__":
     root.title("WEBIT LabJack T7 GUI")
     app = Webit_GUI(root)
     # GUI Plot
-    ani = animation.FuncAnimation(app.fig, app.animate, interval=1000, blit=False)
+    # ani = animation.FuncAnimation(app.fig, app.animate, interval=1000, blit=False)
     # Separate Plot Window
-    ani_AIN = animation.FuncAnimation(app.Ain_fig, app.animate_Ain, interval=1000, blit=False)
+    ani_AIN = animation.FuncAnimation(app.Ain_fig, app.animate_init, interval=1000, blit=False)
 
     app.mainloop()
 
