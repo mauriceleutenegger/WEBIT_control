@@ -493,59 +493,44 @@ class Webit_GUI(tk.Frame):
 #   The Y- limits need to be updated here. They could possibly be animated in
 #   "animate_init"
     def animate(self):
-        # self.ax1.set_xlim(self.startTime, self.AIN_Real_Update[0]+1)
-
         self.ax1 = self.Ain_fig.add_subplot(3,2,1)
-        self.ax1.set_ylim(-1, 10) # Note: Modify for correct limits. 
-        # self.ax1.set_xlabel('Time (s)')
+        self.ax1.set_ylim(-1, 5.5) # Note: Modify for correct limits. 
         self.ax1.set_ylabel('Anode Voltage (kV)')
         self.line1, = self.ax1.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[1])
 
-        self.ax2 = self.Ain_fig.add_subplot(3,2,2)
+        self.ax2 = self.Ain_fig.add_subplot(3,2,3)
         self.ax2.set_ylim(-1, 10) # Note: Modify for correct limits. 
-        # self.ax2.set_xlabel('Time (s)')
         self.ax2.set_ylabel('Bucking Coil (A)')
         self.line2, = self.ax2.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[2])
 
-        self.ax3 = self.Ain_fig.add_subplot(3,2,3)
+        self.ax5 = self.Ain_fig.add_subplot(3,2,5)
+        self.ax5.set_ylim(-1, 10) # Note: Modify for correct limits. 
+        self.ax5.set_xlabel('Time (s)')
+        self.ax5.set_ylabel('I Anode(uA)')
+        self.line5, = self.ax5.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[6])
+
+        self.ax3 = self.Ain_fig.add_subplot(3,2,2)
         self.ax3.set_ylim(1*10**-10, 1*10**-4) # Note: Modify for correct limits. 
-        # self.ax3.set_xlabel('Time (s)')
         self.ax3.set_yscale('log')
         self.ax3.set_ylabel('Pegun (torr')
         self.line3, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[3])
         self.line3.set_label('Pegun')
-
-        # self.line4, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[4])
-        # self.line4.set_label('Ptop')
-
-        # self.line6, = self.ax3.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[6])
-        # self.line6.set_label('Pinj')
 
         self.ax4 = self.Ain_fig.add_subplot(3,2,4)
         self.ax4.set_ylim(1*10**-10, 1*10**-4) # Note: Modify for correct limits. 
         self.ax4.set_xlabel('Time (s)')
         self.ax4.set_ylabel('Pinj (torr)')
         self.ax4.set_yscale('log')
-
-        self.line4, = self.ax4.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[4])
-
-        self.ax5 = self.Ain_fig.add_subplot(3,2,5)
-        self.ax5.set_ylim(-1, 10) # Note: Modify for correct limits. 
-        
-        self.ax5.set_xlabel('Time (s)')
-        self.ax5.set_ylabel('I Anode(uA)')
-        self.line5, = self.ax5.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[5])
+        self.line4, = self.ax4.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[5])
 
         self.ax6 = self.Ain_fig.add_subplot(3,2,6)
         self.ax6.set_ylim(1*10**-10, 1*10**-4) # Note: Modify for correct limits. 
         self.ax6.set_xlabel('Time (s)')
         self.ax6.set_ylabel('Ptop (torr)')
         self.ax6.set_yscale('log')
-        self.line6, = self.ax6.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[6])
+        self.line6, = self.ax6.plot(self.AIN_Real_Update[0], self.AIN_Real_Update[4])
 
-
-        self.Ain_fig.subplots_adjust(hspace=.5,wspace = 0.3)
-        plt.legend()
+        self.Ain_fig.subplots_adjust(hspace=.5,wspace = 0.43)
         self.Ain_fig.show()
 
     def ConvertPressure (self, v) : 
